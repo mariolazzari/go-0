@@ -208,4 +208,85 @@ func main() {
 
 ## Puntatori
 
-###
+### Puntatori e funzioni
+
+```go
+package main
+
+import "fmt"
+
+func cambiaValore(ptr *int) {
+	*ptr = 100
+}
+
+func newInt() *int {
+	return new(int)
+}
+
+func main() {
+	x := 10
+	fmt.Println(x)
+
+	cambiaValore(&x)
+	fmt.Println(x)
+
+	ptr := newInt()
+	*ptr = 3
+	fmt.Println(*ptr)
+
+}
+```
+
+### Puntatori a strutture
+
+```go
+package main
+
+import "fmt"
+
+type Persona struct {
+	Nome string
+	Età  int
+}
+
+type Impiegato struct {
+	Persona
+	Posizione string
+}
+
+func (p *Persona) compleanno() {
+	p.Età++
+}
+
+func main() {
+	p := Persona{Nome: "Mario", Età: 51}
+
+	fmt.Println(p.Nome)
+	fmt.Println(p.Età)
+
+	p.compleanno()
+	fmt.Println(p.Età)
+
+	e := Impiegato{
+		Persona: Persona{
+			Nome: "Mario",
+			Età:  50,
+		},
+		Posizione: "Programmatore",
+	}
+
+	e.compleanno()
+	fmt.Println(e.Nome)
+	fmt.Println(e.Età)
+
+	// struttura anonima
+	punto := struct{ x, y int }{x: 10, y: 10}
+	fmt.Println(punto)
+}
+```
+
+### Metodi
+
+```go
+
+```
