@@ -2,6 +2,6 @@ package main
 
 import "fmt"
 
-func main(){
-	fmt.Println()println("Ciao Mario!")
+func main() {
+	fmt.Println("Ciao Mario!")
 }
