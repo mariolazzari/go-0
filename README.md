@@ -317,4 +317,177 @@ func main() {
 ### Interfacce
 
 ```go
+package main
+
+import (
+	"fmt"
+	"math"
+)
+
+type Forma interface {
+	Area() float64
+}
+
+type Quadrato struct {
+	Lato float64
+}
+
+func (q Quadrato) Area() float64 {
+	return math.Pow(q.Lato, 2)
+}
+
+func StampaArea(f Forma) {
+	fmt.Println("L'area della forma è:", f.Area())
+}
+
+func main() {
+	q := Quadrato{Lato: 10}
+	StampaArea(q)
+}
 ```
+
+### Esercizio 3
+
+```go
+package main
+
+import (
+	"fmt"
+	"sort"
+	"strings"
+)
+
+// Definizione di Libro
+type Libro struct {
+	Titolo string
+	Autore string
+	Anno   int
+}
+
+// Metodo Presentazione per Libro
+func (l Libro) Presentazione() string {
+	return fmt.Sprintf("Titolo: %s\nAutore: %s\nAnno  : %d\n", l.Titolo, l.Autore, l.Anno)
+}
+
+// Interfaccia Biblioteca
+type Biblioteca interface {
+	AggiungiLibro(libro *Libro)
+	PresentaLibri() string
+}
+
+// Implementazione concreta
+type BibliotecaConcreta struct {
+	Libri []*Libro
+}
+
+// AggiungiLibro
+func (b *BibliotecaConcreta) AggiungiLibro(libro *Libro) {
+	b.Libri = append(b.Libri, libro)
+}
+
+// PresentaLibri
+func (b *BibliotecaConcreta) PresentaLibri() string {
+	var presentazioni []string
+
+	for _, libro := range b.Libri {
+		presentazioni = append(presentazioni, libro.Presentazione())
+	}
+
+	sort.Strings(presentazioni)
+
+	return strings.Join(presentazioni, "\n")
+}
+
+// Esempio utilizzo
+func main() {
+	b := &BibliotecaConcreta{}
+
+	b.AggiungiLibro(&Libro{
+		Titolo: "Viaggio al termine della notte",
+		Autore: "Celine",
+		Anno:   1932,
+	})
+
+	b.AggiungiLibro(&Libro{
+		Titolo: "1984",
+		Autore: "George Orwell",
+		Anno:   1949,
+	})
+
+	fmt.Println(b.PresentaLibri())
+}
+```
+
+## File in Go
+
+### Pacchetto ioutil
+
+Il pacchetto **ioutil** che utilizzo negli esempi della sezione è deprecato. Questo significa che, sebbene ancora utilizzabile per compatibilità, ioutil non riceverà più aggiornamenti e potrebbe essere rimosso nelle future versioni di Go.
+
+1. *ioutil.ReadFile* ➔ sostituita da *os.ReadFile*
+2. *ioutil.WriteFile* ➔ sostituita da *os.WriteFile*
+3. *ioutil.ReadAll* ➔ sostituita da *io.ReadAll*
+4. *ioutil.WriteAll* ➔ sostituita da *io.WriteAll*
+5. *ioutil.TempFile* ➔ sostituita da *os.CreateTemp*
+6. *ioutil.TempDir* ➔ sostituita da *os.MkdirTemp*
+
+Il pacchetto ioutil è stato inizialmente pensato per semplificare la gestione di input e output, ma con l'evoluzione del linguaggio Go, molte di queste funzionalità sono state integrate direttamente in *os* e *io*.
+
+Vi chiedo di utilizzare i nuovi metodi di *os* e *io* al posto di ioutil. In questo modo il vostro codice sarà più allineato agli standard attuali.
+
+```go
+package main
+
+import (
+	"fmt"
+	"io"
+	"log"
+	"os"
+)
+
+func main() {
+	f, err := os.Open("main.go")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer f.Close()
+
+	data, err := io.ReadAll(f)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println(string(data))
+}
+````
+
+### File di grandi dimensioni
+
+```go
+package main
+
+import (
+	"bufio"
+	"fmt"
+	"log"
+	"os"
+)
+
+func main() {
+	file, err := os.Open("largefile.txt")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		fmt.Println(scanner.Text())
+	}
+	if err := scanner.Err(); err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+### Scrivere file
