@@ -1,0 +1,3 @@
+module miomodulo
+
+go 1.26.2
