@@ -716,3 +716,79 @@ func main() {
 	fmt.Println(utente.Nome)
 }
 ```
+
+## Concorrenza
+
+### Inroduzione alla concorrenza
+
+- Concorrenza: gestione indipendente di più task
+- Parallelismo: esecuzione simultanea di più task
+
+#### Modello CSP
+
+- Tony Hoare 1978
+- Communicating sequelntial processes
+- Comunicazione tramte canali fra processi indipendenti
+- Canali trasportano dati e controllo degli stessi
+
+### Goroutines 1
+
+- Goroutine: thread leggero gestito dal runtine di Go
+- Thread: più piccola unità di lavoro gestita dal sistema operativo
+
+```go
+package main
+
+import (
+	"fmt"
+	"time"
+)
+
+func say(s string) {
+	for range 5 {
+		time.Sleep(100 * time.Millisecond)
+		fmt.Println(s)
+	}
+}
+
+func main() {
+	go say("Lazzari")
+	say("Mario")
+}
+```
+
+### Goroutines 2
+
+- Done(): fine lavoro
+- Wait(): bloccare fino a termine lavoro
+
+```go
+package main
+
+import (
+	"fmt"
+	"sync"
+	"time"
+)
+
+func worker(id int, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	fmt.Printf("Worker %d starting\n", id)
+	time.Sleep(time.Second)
+	fmt.Printf("Worker %d done\n", id)
+}
+
+func main() {
+	var wg sync.WaitGroup
+
+	for i := range 5 {
+		wg.Add(1)
+		go worker(i, &wg)
+	}
+
+	wg.Wait()
+}
+```
+
+###
