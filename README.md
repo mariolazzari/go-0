@@ -791,4 +791,162 @@ func main() {
 }
 ```
 
-###
+### Mutex
+
+```go
+package main
+
+import (
+	"fmt"
+	"sync"
+)
+
+type SafeCounter struct {
+	v   map[string]int
+	mux sync.Mutex
+}
+
+func (sc *SafeCounter) Inc(key string) {
+	sc.mux.Lock()
+	// solo una goroutine alla volta può accedere a sc.v
+	sc.v[key]++
+	sc.mux.Unlock()
+}
+
+func (sc *SafeCounter) Value(key string) int {
+	sc.mux.Lock()
+	defer sc.mux.Unlock()
+
+	// solo una goroutine alla volta può accedere a sc.v
+	return sc.v[key]
+}
+
+func main() {
+	c := SafeCounter{v: make(map[string]int)}
+	var wg sync.WaitGroup
+
+	/* 	for range 1000 {
+	wg.Add(1)
+	go func() {
+		c.Inc("myKey")
+		wg.Done()
+	}()
+	}*/
+
+	for range 1000 {
+		wg.Go(func() {
+			c.Inc("myKey")
+		})
+	}
+
+	wg.Wait()
+
+	fmt.Println(c.v["myKey"])
+}
+```
+
+### Esercizio 5
+
+```go
+package main
+
+import (
+	"fmt"
+	"sync"
+)
+
+// var counter int = 0
+type SafeCounter struct {
+	counter int
+	mux     sync.Mutex
+}
+
+func saluta(name string, wg *sync.WaitGroup) {
+	defer wg.Done()
+	fmt.Printf("Ciao, %s!\n", name)
+}
+
+func main() {
+	var wg1, wg2 sync.WaitGroup
+
+	nomi := []string{"Alice", "Bruno", "Carlo", "Davide"}
+
+	for _, nome := range nomi {
+		wg1.Add(1)
+		go saluta(nome, &wg1)
+	}
+	wg1.Wait()
+
+	sc := SafeCounter{}
+	for range 1000 {
+		wg2.Add(1)
+		go func() {
+			defer wg2.Done()
+			sc.mux.Lock()
+			defer sc.mux.Unlock()
+			sc.counter++
+		}()
+	}
+
+	wg2.Wait()
+	fmt.Println("Counter =", sc.counter)
+}
+```
+
+### Canali
+
+```go
+package main
+
+import (
+	"fmt"
+	"time"
+)
+
+func worker(msg string, ch chan string) {
+	time.Sleep(time.Second)
+	ch <- msg
+}
+
+func main() {
+	messages := make(chan string)
+
+	go worker("Lavoro completato", messages)
+	msg := <-messages
+	fmt.Println(msg)
+}
+```
+
+### Canali bufferizzati
+
+- canale non bufferizzato: può contenere un solo valore
+  - blocca la goroutine fino a quando il valore viene ricevuto
+- canale bufferizzato: può contenere più valori, fino alla sua capacità massima
+  - la goroutine si blocca quando il buffer è pèieno
+- close(): chiude un canale in modo da impedire nuovi invii sullo stesso
+  - range può ricevere valori fino a quando il canale non viene chiuso
+- deadlock: un valore viene inviato al canale ma non ci sono ricezioni dallo stesso
+
+### Seleziona e timeout
+
+```go
+package main
+
+import (
+	"fmt"
+	"time"
+)
+
+func main() {
+	ch := make(chan int)
+
+	select {
+	case res := <-ch:
+		fmt.Println(res)
+	case <-time.After(time.Second):
+		fmt.Println("Timeout")
+	}
+}
+```
+
+### Patterns di concorrenza
