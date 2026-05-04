@@ -645,4 +645,74 @@ func main() {
 
 ```sh
 go mod init
+go get github.com/gin-gonic/gin
+go mod tidy 
+go run .
+```
+
+### Test e build
+
+```sh
+go test
+go build main.go
+go build main.go -o app
+```
+
+```go
+package main
+
+import "testing"
+
+func Add(a int, b int) int {
+	return a + b
+}
+
+func TestAdd(t *testing.T) {
+	result := Add(1, 2)
+	if result != 3 {
+		t.Errorf("Add(1, 2) = %d; want 3", result)
+	}
+}
+```
+
+### go.mod e go.sum
+
+- go.mod: informazione pacchetti
+- go.sum: somme di controllo crittografiche
+
+```sh
+go get
+go tidy
+```
+
+### Importazioni
+
+```go
+package utenti
+
+type Utente struct {
+	Nome string
+	Mail string
+}
+
+func NuovoUtente(nome, mail string) *Utente {
+	return &Utente{
+		Nome: nome,
+		Mail: mail,
+	}
+}
+```
+
+```go
+package main
+
+import (
+	"fmt"
+	"pack/utenti"
+)
+
+func main() {
+	utente := utenti.NuovoUtente("Mario", "mario,lazzari@gmail.com")
+	fmt.Println(utente.Nome)
+}
 ```
