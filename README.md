@@ -951,7 +951,11 @@ func main() {
 
 ### Patterns di concorrenza
 
+
 #### Fan-out fan-in
+
+- Fan-out: suddivide il carico tra diverse goroutine
+- Fan-in: raccoglie i risultati da più goroutine in un unico canale
 
 ```go
 package main
@@ -1006,6 +1010,9 @@ func main() {
 
 #### Workers pool
 
+- Coda di task da eseguire
+- Più goroutine estraggono dalla coda i task da eseguire
+
 ```go
 package main
 
@@ -1048,6 +1055,93 @@ func main() {
 
 	for a := 1; a <= numLav; a++ {
 		<-risultati
+	}
+}
+```
+
+### Gestione errori
+
+Un errore in una goroutine manda in panic del programma.
+Si crea un canale dedicato agli aerori.
+
+### Error channel
+
+```go
+package main
+
+import (
+	"fmt"
+	"time"
+)
+
+// funzione che potrebbe fallire
+func performTask(i int, errCh chan<- error) {
+	// simuliamo un errore per i pari
+	if i%2 == 0 {
+		errCh <- fmt.Errorf("Errore con l'input %d", i)
+		return
+	}
+
+	// Se non ci sono errori, simuliamo un operazione con un ritardo
+	time.Sleep(2 * time.Second)
+	fmt.Printf("Task %d completato con successo\n", i)
+}
+
+func main() {
+	numTasks := 5
+	errCh := make(chan error, numTasks)
+
+	for i := range numTasks {
+		go performTask(i, errCh)
+	}
+
+	for i := range numTasks {
+		select {
+		case err := <-errCh:
+			if err != nil {
+				fmt.Printf("Ricevuto un errore: %s\n", err)
+			}
+		case <-time.After(5 * time.Second):
+			fmt.Printf("Task %d non ha completato in tempo\n", i)
+		}
+	}
+}
+```
+
+#### Error group
+
+```go
+package main
+
+import (
+	"fmt"
+	"net/http"
+
+	"golang.org/x/sync/errgroup"
+)
+
+func main() {
+	var g errgroup.Group
+	var urls = []string{
+		"http://www.google.com",
+		"http://www.yahoo.com",
+		"http://www.bing.com",
+	}
+	for _, url := range urls {
+		// Copia l'URL corrente nella variabile locale per evitare problemi di sincronizzazione dei dati.
+		url := url
+		g.Go(func() error {
+			resp, err := http.Get(url)
+			if err == nil {
+				resp.Body.Close()
+			}
+			return err
+		})
+	}
+	if err := g.Wait(); err == nil {
+		fmt.Println("Recuperati con successo tutti gli URL.")
+	} else {
+		fmt.Println("Errore riscontrato:", err)
 	}
 }
 ```

@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// ogni worked ha un id univico, un canale per ricevere lavori e uno per inviare risultati
 func worker(id int, lavori <-chan int, risultati chan<- int) {
 	// Il ciclo for continua ad estrarre i lavori dal canale "lavori" finché non è vuoto e chiuso.
 	for j := range lavori {
