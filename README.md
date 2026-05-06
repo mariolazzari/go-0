@@ -1407,3 +1407,213 @@ func main() {
 	fmt.Printf("Ricevuto la risposta dal server: %s\n", string(buffer[:length]))
 }
 ```
+
+### Server HTTP
+
+```go
+package main
+
+import (
+	"fmt"
+	"log"
+	"net/http"
+)
+
+func main() {
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "Primo server HTTP in Go")
+	})
+
+	err := http.ListenAndServe(":8080", nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+### Esercizio server HTTP
+
+```go
+package main
+
+import (
+	"fmt"
+	"log"
+	"net/http"
+)
+
+func handlerRoot(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "Ciao Mario!")
+}
+
+func main() {
+	http.HandleFunc("/", handlerRoot)
+
+	err := http.ListenAndServe(":8080", nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+### Metodi HTTP
+
+I metodi HTTP, noti anche come "verbi HTTP", definiscono le operazioni che possono essere eseguite su una determinata risorsa in una rete HTTP. I principali metodi HTTP includono:
+
+- GET: questo metodo viene utilizzato per richiedere dati da una risorsa specificata. Le richieste GET dovrebbero solo ricevere dati e non avere alcun effetto sulle risorse del server.
+
+- POST: questo metodo viene utilizzato per inviare dati a un server per creare una nuova risorsa. I dati vengono inclusi nel corpo della richiesta.
+
+- PUT: viene utilizzato per aggiornare una risorsa esistente con i dati forniti. A differenza del metodo POST, il metodo PUT è idempotente, il che significa che l'invio ripetuto della stessa richiesta avrà lo stesso effetto di una singola richiesta.
+
+- DELETE: questo metodo viene utilizzato per eliminare una risorsa specificata.
+
+- HEAD: è molto simile al metodo GET, ma richiede solo le intestazioni che avrebbero fatto parte della risposta al metodo GET. Può essere utilizzato per verificare l'esistenza di una risorsa o per verificare le intestazioni di risposta prima di scaricare l'intera risorsa.
+
+- OPTIONS: questo metodo viene utilizzato per descrivere le opzioni di comunicazione per la risorsa di destinazione. Può essere utilizzato per determinare i metodi HTTP supportati da un server o per fare una richiesta "preflight" per determinare se una richiesta di origine incrociata (CORS) sarà accettata.
+
+- PATCH: viene utilizzato per applicare modifiche parziali a una risorsa. A differenza del metodo PUT, che richiede di inviare l'intera entità aggiornata, il metodo PATCH richiede solo di inviare le modifiche specifiche da applicare all'entità.
+
+- CONNECT: questo metodo viene utilizzato da un client per stabilire una rete di tunnel verso un host di destinazione.
+
+- TRACE: questo metodo esegue un test di loopback del messaggio di richiesta lungo il percorso della risorsa di destinazione.
+
+Ciascuno di questi metodi può essere utilizzato per operazioni specifiche su una risorsa HTTP, e capire come e quando utilizzarli può essere essenziale per la creazione di applicazioni web robuste e sicure.
+
+### CLient HTTP
+
+```go
+package main
+
+import (
+	"io"
+	"log"
+	"net/http"
+)
+
+func main() {
+	resp, err := http.Get("https://jsonplaceholder.typicode.com/users")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println(string(body))
+}
+
+	post := `{
+"userId": 1,
+"id": 1,
+"title": "sunt aut facere repellat provident occaecati excepturi optio reprehenderit",
+"body": "quia et suscipit\nsuscipit recusandae consequuntur expedita et cum\nreprehenderit molestiae ut ut quas totam\nnostrum rerum est autem sunt rem eveniet architecto"
+}`
+
+	resp, err = http.Post("https://jsonplaceholder.typicode.com/posts", "application/json", strings.NewReader(post))
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer resp.Body.Close()
+
+	body, err = io.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println(string(body))
+```
+
+### Framework web
+
+- Gorilla mux
+- Gin
+
+## Applicazioni Web
+
+### Pacchetti utilizzati
+
+Qui di seguito ti elenco dei pacchetti di Go utili per creare app web (non ho inserito quelli già visti ovvero net, net/http, mux e gin).
+
+#### html/template
+
+Il pacchetto html/template fornisce le funzionalità per creare viste HTML dinamiche. Le viste HTML vengono utilizzate per visualizzare i contenuti di un'applicazione web.
+
+#### database/sql
+
+Il pacchetto database/sql fornisce le funzionalità per interagire con i database. Questo pacchetto consente di accedere ai dati da un database e di aggiornare i dati in un database.
+
+#### gorm
+
+Il pacchetto gorm è un ORM (Object-Relational Mapping) per Go. ORM aiutano a convertire i dati tra oggetti e tabelle di database.
+
+#### crypto/rand
+
+Il pacchetto crypto/rand fornisce le funzionalità per generare numeri casuali. I numeri casuali possono essere utilizzati per una varietà di scopi, tra cui la generazione di token di sicurezza e la crittografia.
+
+#### log
+
+Il pacchetto log fornisce le funzionalità per registrare messaggi di log. I messaggi di log possono essere utilizzati per tracciare l'attività di un'applicazione web e per rilevare eventuali problemi.
+
+#### os
+
+Il pacchetto os fornisce le funzionalità per interagire con il sistema operativo. Questo pacchetto consente di accedere ai file e alle directory dal sistema operativo, e di eseguire comandi del sistema operativo.
+
+#### io
+
+Il pacchetto io fornisce le funzionalità per leggere e scrivere file. Questo pacchetto consente di accedere ai dati da un file e di scrivere dati in un file.
+
+#### time
+
+Il pacchetto time fornisce le funzionalità per gestire il tempo. Questo pacchetto consente di ottenere l'ora corrente, di misurare il tempo di esecuzione di un codice, e di pianificare eventi futuri.
+
+### Sessioni
+
+```go
+package main
+
+import (
+	"fmt"
+	"net/http"
+	"time"
+)
+
+func setCookie(w http.ResponseWriter, r *http.Request) {
+	expiration := time.Now().Add(365 * 24 * time.Hour)
+
+	cookie := http.Cookie{
+		Name:    "FirstVisit",
+		Value:   "1",
+		Expires: expiration,
+	}
+
+	http.SetCookie(w, &cookie)
+
+	fmt.Fprintf(w, "Cookie impostato. Per favore vai alla pagina /check-cookie per verificare il cookie.")
+}
+
+func checkCookie(w http.ResponseWriter, r *http.Request) {
+	cookie, _ := r.Cookie("FirstVisit")
+
+	if cookie != nil {
+		fmt.Fprintf(w, "Bentornato! Hai visitato questo sito %s volta\n", cookie.Value)
+	} else {
+		fmt.Fprintf(w, "Benvenuto! Non hai mai visitato questo sito prima o il tuo cookie è scaduto.")
+	}
+}
+
+func main() {
+	http.HandleFunc("/set-cookie", setCookie)
+	http.HandleFunc("/check-cookie", checkCookie)
+
+	fmt.Println("Server avviato su localhost:8080")
+
+	http.ListenAndServe(":8080", nil)
+}
+```
+
+### Gestione input
+
+```go
+```
