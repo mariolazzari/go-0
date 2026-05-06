@@ -24,5 +24,6 @@ func formHanlder(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-
+	http.HandleFunc("/", formHanlder)
+	http.ListenAndServe(":8080", nil)
 }

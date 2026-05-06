@@ -1616,4 +1616,118 @@ func main() {
 ### Gestione input
 
 ```go
+package main
+
+import (
+	"fmt"
+	"log"
+	"net/http"
+)
+
+func formHanlder(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	nome := r.FormValue("nome")
+	email := r.FormValue("email")
+
+	// validazione
+	if nome == "" || email == "" {
+		fmt.Fprintf(w, "Nome e email sono obbligatori")
+	}
+
+	fmt.Fprintf(w, "Nome: %s\nEmail: %s", nome, email)
+}
+
+func main() {
+	http.HandleFunc("/", formHanlder)
+	http.ListenAndServe(":8080", nil)
+}
+```
+
+### Database
+
+#### Driver 
+
+```go
+package main
+
+import (
+	"database/sql"
+	"fmt"
+	"log"
+
+	_ "github.com/go-sql-driver/mysql"
+)
+
+func main() {
+	db, err := sql.Open("mysql", "user:password/dbname")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
+	// select
+	rows, err := db.Query("Select * from users")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var name string
+		if err := rows.Scan(&name); err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println(name)
+	}
+
+	// insert
+	stmt, err := db.Prepare("insert into users(name) values(?)")
+	if err != nil {
+		log.Fatal(err)
+	}
+	res, err := stmt.Exec("Mario")
+	if err != nil {
+		log.Fatal(err)
+	}
+	lastId, err := res.LastInsertId()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("Last ID:", lastId)
+}
+```
+
+#### Gorm
+
+```sh
+go get -u gorm.io/driver/sqlite
+```
+
+```go
+package main
+
+import (
+	"log"
+
+	"github.com/golang-migrate/migrate/v4/database/sqlite"
+	"gorm.io/gorm"
+)
+
+type User struct {
+	gorm.Model
+	Name string
+}
+
+func main() {
+	db, err := gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
+	if err != nil {
+		log.Fatal(err)
+	}
+	db.AutoMigrate(&User{})
+	db.Create(&User{Name: "Mario"})
+}
 ```
