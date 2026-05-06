@@ -1325,4 +1325,85 @@ func main() {
 }
 ```
 
-### Client UDP
+### Esempio UDP
+
+#### Server UDP
+
+```go
+package main
+
+import (
+	"fmt"
+	"log"
+	"net"
+)
+
+func main() {
+	addr, err := net.ResolveUDPAddr("udp", ":8080")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	conn, err := net.ListenUDP("udp", addr)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer conn.Close()
+
+	buffer := make([]byte, 1024)
+
+	for {
+		length, clientAddr, err := conn.ReadFromUDP(buffer)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		fmt.Printf("Ricevuto messaggio dal client: %s\n", string(buffer[:length]))
+
+		message := []byte("Messaggio ricevuto")
+		_, err = conn.WriteToUDP(message, clientAddr)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+}
+```
+
+#### CLient UDP
+
+```go
+package main
+
+import (
+	"fmt"
+	"log"
+	"net"
+)
+
+func main() {
+	serverAddr, err := net.ResolveUDPAddr("udp", "localhost:8080")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	conn, err := net.DialUDP("udp", nil, serverAddr)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer conn.Close()
+
+	message := []byte("Ciao, server!")
+	_, err = conn.Write(message)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	buffer := make([]byte, 1024)
+	length, err := conn.Read(buffer)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf("Ricevuto la risposta dal server: %s\n", string(buffer[:length]))
+}
+```
