@@ -121,7 +121,7 @@ func main() {
 			fmt.Fprintf(w, "Utente aggiornato")
 
 		default:
-			http.Error(w, "Metodo non supportato")
+			http.Error(w, "Metodo non supportato", http.StatusNotImplemented)
 		}
 	})
 
