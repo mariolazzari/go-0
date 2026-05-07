@@ -1731,3 +1731,164 @@ func main() {
 	db.Create(&User{Name: "Mario"})
 }
 ```
+
+### Transazioni
+
+```go
+package main
+
+import (
+	"database/sql"
+	"log"
+
+	_ "github.com/go-sql-driver/mysql"
+)
+
+func main() {
+	db, err := sql.Open("mysql", "user:password/dbname")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
+	tx, err := db.Begin()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	_, err = tx.Exec("insert into users(name) values(?)", "Mario")
+	if err != nil {
+		tx.Rollback()
+		log.Fatal(err)
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+### Web CRUD
+
+```go
+package main
+
+import (
+	"fmt"
+	"net/http"
+
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
+)
+
+type User struct {
+	gorm.Model
+	Name string
+}
+
+var db *gorm.DB
+
+func init() {
+	var err error
+	db, err = gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
+	if err != nil {
+		panic("non riesco a collegarmi con il database")
+	}
+
+	db.AutoMigrate(&User{})
+}
+
+func main() {
+	http.HandleFunc("/create", func(w http.ResponseWriter, r *http.Request) {
+		name := r.URL.Query().Get("name")
+		db.Create(&User{Name: name})
+		fmt.Fprintf(w, "Utente creato")
+	})
+
+	http.HandleFunc("/read", func(w http.ResponseWriter, r *http.Request) {
+		var users []User
+		db.Find(&users)
+
+		fmt.Fprintf(w, "Lista utente:\n")
+		for _, user := range users {
+			fmt.Fprintf(w, user.Name, "\n")
+		}
+	})
+
+	http.HandleFunc("/update", func(w http.ResponseWriter, r *http.Request) {
+		id := r.URL.Query().Get("id")
+		name := r.URL.Query().Get("name")
+
+		var user User
+		db.First(&user, id)
+		user.Name = name
+		db.Save(&user)
+
+		fmt.Fprintf(w, "Utente aggiornato")
+	})
+
+	http.HandleFunc("/delete", func(w http.ResponseWriter, r *http.Request) {
+		id := r.URL.Query().Get("id")
+		db.Delete(&User{}, id)
+
+		fmt.Fprintf(w, "Utente cancellato")
+	})
+
+	http.ListenAndServe(":8080", nil)
+}
+```
+
+### Template HTML
+
+```go
+package main
+
+import (
+	"html/template"
+	"net/http"
+)
+
+type Page struct {
+	Title  string
+	Header string
+	Body   string
+}
+
+func main() {
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		p := &Page{
+			Title:  "Benvenuto",
+			Header: "Ciao, mondo!",
+			Body:   "Benvenuto nella mia applicazione!",
+		}
+
+		t, _ := template.ParseFiles("layout.html", "content.html")
+
+		t.ExecuteTemplate(w, "content", p)
+	})
+
+	http.ListenAndServe(":8080", nil)
+}
+```
+
+```html
+{{define "content"}}
+<h1>{{.Header}}</h1>
+<p>{{.Body}}</p>
+{{end}}
+```
+
+```html
+<!doctype html>
+<html>
+    <head>
+        <title>{{.Title}}</title>
+    </head>
+    <body>
+        {{template "content" .}}
+    </body>
+</html>
+```
+
+### Sicurezza
