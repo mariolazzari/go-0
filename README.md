@@ -25,7 +25,7 @@ go run main.go
 ### Glossario
 
 - **Array**: una raccolta ordinata di elementi dello stesso tipo.
-. **Canale** (Channel): un canale è una struttura di dati utilizzata per la comunicazione tra goroutine in Go.
+  . **Canale** (Channel): un canale è una struttura di dati utilizzata per la comunicazione tra goroutine in Go.
 - **Client HTTP**: in Go, è possibile creare client per effettuare richieste HTTP a server.
 - **Concorrenza (Concurrency)**: la concorrenza in Go è la composizione di funzioni indipendentemente eseguibili (goroutine) che comunicano attraverso i canali.
 - **Costante (Constant)**: una costante è simile a una variabile, tranne per il fatto che il suo valore non può essere modificato una volta assegnato.
@@ -54,13 +54,13 @@ go run main.go
 ### Variabili e costanti
 
 - Vaviabile: zona di memoria in cui memorizzare valori, dotata di nome e tipo
-- Costante: non possono essere modificate. Non è necessario specificarne il tipo e possono essere correlate usando *iota*
+- Costante: non possono essere modificate. Non è necessario specificarne il tipo e possono essere correlate usando _iota_
 
 ### Tipi
 
 - Primitivi
 - Array: sequenza ordinata dello stesso tipo
-- Slice: array con dimensione dinamica, utilizzando *append*
+- Slice: array con dimensione dinamica, utilizzando _append_
 - Struttura: raggruppa tipi diversi. Si possono definire metodi su strutture
 
 ```go
@@ -424,16 +424,16 @@ func main() {
 
 Il pacchetto **ioutil** che utilizzo negli esempi della sezione è deprecato. Questo significa che, sebbene ancora utilizzabile per compatibilità, ioutil non riceverà più aggiornamenti e potrebbe essere rimosso nelle future versioni di Go.
 
-1. *ioutil.ReadFile* ➔ sostituita da *os.ReadFile*
-2. *ioutil.WriteFile* ➔ sostituita da *os.WriteFile*
-3. *ioutil.ReadAll* ➔ sostituita da *io.ReadAll*
-4. *ioutil.WriteAll* ➔ sostituita da *io.WriteAll*
-5. *ioutil.TempFile* ➔ sostituita da *os.CreateTemp*
-6. *ioutil.TempDir* ➔ sostituita da *os.MkdirTemp*
+1. _ioutil.ReadFile_ ➔ sostituita da _os.ReadFile_
+2. _ioutil.WriteFile_ ➔ sostituita da _os.WriteFile_
+3. _ioutil.ReadAll_ ➔ sostituita da _io.ReadAll_
+4. _ioutil.WriteAll_ ➔ sostituita da _io.WriteAll_
+5. _ioutil.TempFile_ ➔ sostituita da _os.CreateTemp_
+6. _ioutil.TempDir_ ➔ sostituita da _os.MkdirTemp_
 
-Il pacchetto ioutil è stato inizialmente pensato per semplificare la gestione di input e output, ma con l'evoluzione del linguaggio Go, molte di queste funzionalità sono state integrate direttamente in *os* e *io*.
+Il pacchetto ioutil è stato inizialmente pensato per semplificare la gestione di input e output, ma con l'evoluzione del linguaggio Go, molte di queste funzionalità sono state integrate direttamente in _os_ e _io_.
 
-Vi chiedo di utilizzare i nuovi metodi di *os* e *io* al posto di ioutil. In questo modo il vostro codice sarà più allineato agli standard attuali.
+Vi chiedo di utilizzare i nuovi metodi di _os_ e _io_ al posto di ioutil. In questo modo il vostro codice sarà più allineato agli standard attuali.
 
 ```go
 package main
@@ -459,7 +459,7 @@ func main() {
 
 	fmt.Println(string(data))
 }
-````
+```
 
 ### File di grandi dimensioni
 
@@ -646,7 +646,7 @@ func main() {
 ```sh
 go mod init
 go get github.com/gin-gonic/gin
-go mod tidy 
+go mod tidy
 go run .
 ```
 
@@ -950,7 +950,6 @@ func main() {
 ```
 
 ### Patterns di concorrenza
-
 
 #### Fan-out fan-in
 
@@ -1649,7 +1648,7 @@ func main() {
 
 ### Database
 
-#### Driver 
+#### Driver
 
 ```go
 package main
@@ -1882,18 +1881,18 @@ func main() {
 ```html
 <!doctype html>
 <html>
-    <head>
-        <title>{{.Title}}</title>
-    </head>
-    <body>
-        {{template "content" .}}
-    </body>
+  <head>
+    <title>{{.Title}}</title>
+  </head>
+  <body>
+    {{template "content" .}}
+  </body>
 </html>
 ```
 
 ### Autenticazione
 
-#### Basic 
+#### Basic
 
 ```go
 package main
@@ -2443,3 +2442,79 @@ func main() {
 ```
 
 ### Template HTML
+
+```html
+<!doctype html>
+<html lang="it">
+  <head>
+    <title>Utente</title>
+  </head>
+  <body>
+    <h1>Profilo utentte {{.Name}}</h1>
+    <p>ID: {{.ID}}</p>
+    <p>Email: {{.Email}}</p>
+
+    <form action="/user" method="post">
+      Nome: <input type="text" name="name" value="{{.Name}} required" /> Email:
+      <input type="email" name="email" required /> Password:<input
+        type="password"
+        name="password"
+        required
+      />
+      <input type="submit" value="Aggiorna" />
+    </form>
+
+    <form action="/logout" method="post">
+      <input type="submit" value="Logout" />
+    </form>
+  </body>
+</html>
+```
+
+## Conclusione
+
+### Reflection, type assertion e any
+
+```go
+package main
+
+import (
+	"fmt"
+	"reflect"
+)
+
+type Person struct {
+	Name string
+	Age  int
+}
+
+func main() {
+	var x int = 7
+	t := reflect.TypeFor[int]()
+	v := reflect.ValueOf(x)
+	fmt.Println(t, v)
+
+	for i := range v.NumField() {
+		field := v.Type().Field(i)
+		value := v.Field(i).Interface()
+		fmt.Println(field, value)
+	}
+
+	mixed := []any{"ciao", 1, true}
+	fmt.Println(mixed...)
+
+	var val any = 42
+
+	switch val.(type) {
+	case int:
+		fmt.Println("Numero")
+
+	case string:
+		fmt.Println("String")
+
+	default:
+		fmt.Println("Sconosciuto")
+	}
+
+}
+```
