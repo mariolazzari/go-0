@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -42,7 +43,6 @@ func main() {
 			t, _ := template.ParseFiles("login.html")
 			t.Execute(w, nil)
 		}
-		fmt.Fprintf(w, "WIP")
 
 		name := r.FormValue("name")
 		password := r.FormValue("password")
@@ -64,8 +64,84 @@ func main() {
 		http.Redirect(w, r, "/user", http.StatusSeeOther)
 	})
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "WIP")
+	http.HandleFunc("/register", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			t, _ := template.ParseFiles("login.html")
+			t.Execute(w, nil)
+		}
+
+		name := r.FormValue("name")
+		email := r.FormValue("email")
+		password := r.FormValue("password")
+
+		var userID int
+		err := db.QueryRow("insert into users(name, email, password) values ($1, $2, $3) returning id", name, email, password).Scan(&userID)
+		if err != nil {
+			log.Fatal(err)
+			http.Error(w, "Errore durante registrazione", 500)
+			return
+		}
+
+		fmt.Fprintf(w, "Utente registrato con successo")
 	})
+
+	http.HandleFunc("/user", func(w http.ResponseWriter, r *http.Request) {
+		cookie, err := r.Cookie("session_id")
+		if err != nil {
+			http.Error(w, "Non autenticato", http.StatusUnauthorized)
+			return
+		}
+
+		userID, ok := sessionMap[cookie.Value]
+		if !ok {
+			http.Error(w, "Sessione non valida", http.StatusUnauthorized)
+		}
+
+		var user User
+		switch r.Method {
+		case http.MethodGet:
+			err := db.QueryRow("select id, name, email from user where id = $1", userID).Scan(&user.ID, &user.Name, &user.Email)
+			if err != nil {
+				http.Error(w, "Utente non trovato", http.StatusNotFound)
+				return
+			}
+			t, err := template.ParseFiles("user.html")
+			t.Execute(w, user)
+
+		case http.MethodPost:
+			newName := r.FormValue("name")
+			newPassword := r.FormValue("password")
+
+			err := db.QueryRow("update users set name = $1, password = $2 from user where id = $3", newName, newPassword, userID)
+			if err != nil {
+				http.Error(w, "Errore aggiornamento utente", http.StatusInternalServerError)
+				return
+			}
+
+			fmt.Fprintf(w, "Utente aggiornato")
+
+		default:
+			http.Error(w, "Metodo non supportato")
+		}
+	})
+
+	http.HandleFunc("/logout", func(w http.ResponseWriter, r *http.Request) {
+		cookie, err := r.Cookie("session_id")
+		if err != nil {
+			http.Error(w, "Non autenticato", http.StatusUnauthorized)
+			return
+		}
+
+		delete(sessionMap, cookie.Value)
+
+		http.SetCookie(w, &http.Cookie{
+			Name:    "session_id",
+			Value:   "",
+			Expires: time.Unix(0, 0),
+		})
+
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+	})
+
 	http.ListenAndServe(":8080", nil)
 }
